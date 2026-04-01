@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Cache-Control Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>مصحف التلاوة</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
+        
+        :root {
+            --bg-color: #121212;
+            --text-color: #E0E0E0;
+            --accent-color: #00b894;
+            --panel-bg: #1e1e1e;
+        }
+
+        body {
+            font-family: 'Amiri', serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+
+        .verse-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        .verse-text {
+            font-size: clamp(1.8rem, 6vw, 3.2rem);
+            line-height: 2.2;
+            max-width: 1000px;
+            transition: opacity 0.3s ease;
+            word-wrap: break-word;
+            padding: 20px;
+        }
+
+        .controls-panel {
+            background-color: var(--panel-bg);
+            box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            width: 100%;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            height: 100px;
+            width: 100%;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text-color);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-btn:active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .play-pause-container {
+            background-color: var(--accent-color) !important;
+            color: white !important;
+        }
+
+        #btnPrev { order: 1; border-left: 1px solid rgba(255,255,255,0.05); }
+        #btnPlayPause { order: 2; }
+        #btnNext { order: 3; border-right: 1px solid rgba(255,255,255,0.05); }
+
+        select, .theme-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            padding: 0.6rem 1rem;
+            border-radius: 12px;
+            font-weight: bold;
+            outline: none;
+        }
+
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header class="p-4 bg-transparent">
+        <div class="max-w-xl mx-auto flex items-center gap-2">
+            <select id="chapterSelector" class="flex-grow">
+                <option value="">جاري التحميل...</option>
+            </select>
+            <button id="themeToggle" class="theme-btn" title="تغيير المظهر">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256"><path d="M128,72a56,56,0,1,0,56,56A56.06,56.06,0,0,0,128,72Zm0,96a40,40,0,1,1,40-40A40,40,0,0,1,128,168ZM128,48a8,8,0,0,1-8-8V24a8,8,0,0,1,16,0V40A8,8,0,0,1,128,48Zm0,184a8,8,0,0,1-8-8V200a8,8,0,0,1,16,0v16A8,8,0,0,1,128,232ZM56,128a8,8,0,0,1-8-8V104a8,8,0,0,1,16,0v16A8,8,0,0,1,56,128Zm152,0a8,8,0,0,1-8-8V104a8,8,0,0,1,16,0v16A8,8,0,0,1,208,128ZM62.63,62.63a8,8,0,0,1,0-11.32l16-16a8,8,0,0,1,11.32,11.32l-16,16A8,8,0,0,1,62.63,62.63Zm114.74,114.74a8,8,0,0,1,0-11.32l16-16a8,8,0,0,1,11.32,11.32l-16,16A8,8,0,0,1,177.37,177.37ZM62.63,193.37l16-16a8,8,0,0,1,11.32,11.32l-16,16a8,8,0,0,1-11.32-11.32ZM177.37,78.63l16-16a8,8,0,0,1,11.32,11.32l-16,16a8,8,0,0,1-11.32-11.32Z"></path></svg>
+            </button>
+        </div>
+        <div id="verseIndicator" class="text-center mt-3 text-lg opacity-80 font-bold">-- / --</div>
+    </header>
+
+    <div class="progress-container">
+        <div id="progressBar" class="progress-bar"></div>
+    </div>
+
+    <main class="verse-container">
+        <div id="loading" class="loader hidden"></div>
+        <div id="verseText" class="verse-text">الرجاء اختيار السورة الكريمة للبدء</div>
+    </main>
+
+    <footer class="controls-panel">
+        <div class="footer-grid">
+            <button id="btnPrev" class="nav-btn" title="السابق (يسار)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path></svg>
+            </button>
+
+            <button id="btnPlayPause" class="nav-btn play-pause-container" title="تشغيل/إيقاف">
+                <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="currentColor" viewBox="0 0 256 256"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.75a16,16,0,0,1-24.32-13.51V40a16,16,0,0,1,24.32-13.51L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path></svg>
+                <svg id="pauseIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z"></path></svg>
+            </button>
+
+            <button id="btnNext" class="nav-btn" title="التالي (يمين)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path></svg>
+            </button>
+        </div>
+    </footer>
+
+    <audio id="audioPlayer"></audio>
+
+    <script>
+        const themes = [
+            { name: 'Dark', bg: '#121212', text: '#E0E0E0', panel: '#1e1e1e' },
+            { name: 'Classic', bg: '#FAF3DD', text: '#000000', panel: '#f0e9d2' },
+            { name: 'Sepia', bg: '#F3E6D0', text: '#3B2417', panel: '#e6d8c0' },
+            { name: 'Yellow', bg: '#F9ECB6', text: '#061349', panel: '#eedf9f' }
+        ];
+
+        const chapterNames = {
+            "001": "الفاتحة", "002": "البقرة", "003": "آل عمران", "004": "النساء", "005": "المائدة",
+            "006": "الأنعام", "007": "الأعراف", "008": "الأنفال", "009": "التوبة", "010": "يونس",
+            "011": "هود", "012": "يوسف", "013": "الرعد", "014": "إبراهيم", "015": "الحجر",
+            "016": "النحل", "017": "الإسراء", "018": "الكهف", "019": "مريم", "020": "طه",
+            "021": "الأنبياء", "022": "الحج", "023": "المؤمنون", "024": "النور", "025": "الفرقان",
+            "026": "الشعراء", "027": "النمل", "028": "القصص", "029": "العنكبوت", "030": "الروم",
+            "031": "لقمان", "032": "السجدة", "033": "الأحزاب", "034": "سبأ", "035": "فاطر",
+            "036": "يس", "037": "الصافات", "038": "ص", "039": "الزمر", "040": "غافر",
+            "041": "فصلت", "042": "الشورى", "043": "الزخرف", "044": "الدخان", "045": "الجاثية",
+            "046": "الأحقاف", "047": "محمد", "048": "الفتح", "049": "الحجرات", "050": "ق",
+            "051": "الذاريات", "052": "الطور", "053": "النجم", "054": "القمر", "055": "الرحمن",
+            "056": "الواقعة", "057": "الحديد", "058": "المجادلة", "059": "الحشر", "060": "الممتحنة",
+            "061": "الصف", "062": "الجمعة", "063": "المنافقون", "064": "التغابن", "065": "الطلاق",
+            "066": "التحريم", "067": "الملك", "068": "القلم", "069": "الحاقة", "070": "المعارج",
+            "071": "نوح", "072": "الجن", "073": "المزمل", "074": "المدثر", "075": "القيامة",
+            "076": "الإنسان", "077": "المرسلات", "078": "النبأ", "079": "النازعات", "080": "عبس",
+            "081": "التكوير", "082": "الانفطار", "083": "المطففين", "084": "الانشقاق", "085": "البروج",
+            "086": "الطارق", "087": "الأعلى", "088": "الغاشية", "089": "الفجر", "090": "البلد",
+            "091": "الشمس", "092": "الليل", "093": "الضحى", "094": "الشرح", "095": "التين",
+            "096": "العلق", "097": "القدر", "098": "البينة", "099": "الزلزلة", "100": "العاديات",
+            "101": "القارعة", "102": "التكاثر", "103": "العصر", "104": "الهمزة", "105": "الفيل",
+            "106": "قريش", "107": "الماعون", "108": "الكوثر", "109": "الكافرون", "110": "النصر",
+            "111": "المسد", "112": "الإخلاص", "113": "الفلق", "114": "الناس"
+        };
+
+        const SESSION_ID = new Date().getTime(); // Unique per app launch
+        let basePath = "";
+        let currentChapter = localStorage.getItem('lastChapter') || "";
+        let currentVerse = parseInt(localStorage.getItem('lastVerse')) || 1;
+        let totalVerses = 0;
+        let chapterAmounts = {};
+        let currentThemeIndex = parseInt(localStorage.getItem('currentThemeIndex')) || 0;
+
+        const ui = {
+            chapterSelector: document.getElementById('chapterSelector'),
+            verseText: document.getElementById('verseText'),
+            verseIndicator: document.getElementById('verseIndicator'),
+            progressBar: document.getElementById('progressBar'),
+            audio: document.getElementById('audioPlayer'),
+            btnPlayPause: document.getElementById('btnPlayPause'),
+            btnNext: document.getElementById('btnNext'),
+            btnPrev: document.getElementById('btnPrev'),
+            playIcon: document.getElementById('playIcon'),
+            pauseIcon: document.getElementById('pauseIcon'),
+            loader: document.getElementById('loading'),
+            themeToggle: document.getElementById('themeToggle')
+        };
+
+        // Cache busting URLs - Force no-store for metadata
+        const getMetaUrl = (file) => `${file}?cb=${SESSION_ID}`;
+        const getAssetUrl = (file) => `${file}?v=${SESSION_ID}`;
+
+        async function init() {
+            try {
+                let dataText = "root";
+                try {
+                    const dataRes = await fetch(getMetaUrl('data.txt'), { cache: "no-store" });
+                    if (dataRes.ok) dataText = (await dataRes.text()).trim();
+                } catch (e) {}
+                basePath = (dataText === 'root' || dataText === '') ? '' : dataText;
+                if (basePath && !basePath.endsWith('/')) basePath += '/';
+
+                try {
+                    const amountRes = await fetch(getMetaUrl(`${basePath}amount.txt`), { cache: "no-store" });
+                    if (amountRes.ok) {
+                        const text = await amountRes.text();
+                        text.split(/\r?\n/).forEach(line => {
+                            const [code, amount] = line.trim().split(/\s+/);
+                            if (code && amount) chapterAmounts[code] = parseInt(amount);
+                        });
+                    }
+                } catch (e) {}
+
+                const allowedRes = await fetch(getMetaUrl(`${basePath}allowed.txt`), { cache: "no-store" });
+                const allowedText = await allowedRes.text();
+                const allowedChapters = allowedText.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+
+                ui.chapterSelector.innerHTML = '<option value="">اختر السورة</option>';
+                allowedChapters.forEach(code => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = chapterNames[code] || `سورة ${code}`;
+                    if (code === currentChapter) option.selected = true;
+                    ui.chapterSelector.appendChild(option);
+                });
+
+                setTheme(currentThemeIndex);
+
+                if (currentChapter) {
+                    totalVerses = chapterAmounts[currentChapter] || 0;
+                    loadVerse(currentChapter, currentVerse, false);
+                }
+
+            } catch (error) {
+                console.error(error);
+                ui.verseText.textContent = "خطأ في التحميل - يرجى تحديث الصفحة";
+            }
+        }
+
+        function setTheme(index) {
+            const theme = themes[index];
+            document.documentElement.style.setProperty('--bg-color', theme.bg);
+            document.documentElement.style.setProperty('--text-color', theme.text);
+            document.documentElement.style.setProperty('--panel-bg', theme.panel);
+            currentThemeIndex = index;
+            localStorage.setItem('currentThemeIndex', index);
+        }
+
+        function formatNum(num) { return num.toString().padStart(3, '0'); }
+
+        async function preloadNext(chapter, startVerse) {
+            for (let i = 1; i <= 3; i++) {
+                const v = startVerse + i;
+                if (v > (chapterAmounts[chapter] || 999)) break;
+                const vStr = formatNum(v);
+                fetch(getAssetUrl(`${basePath}chapters/${chapter}/text/${vStr}.txt`)).catch(()=>{});
+                fetch(getAssetUrl(`${basePath}chapters/${chapter}/audio/${vStr}.mp3`)).catch(()=>{});
+            }
+        }
+
+        async function loadVerse(chapter, verse, shouldAutoplay = true) {
+            if (!chapter) return;
+            
+            // CLEAN SWITCH: Stop previous audio immediately
+            ui.audio.pause();
+            ui.audio.removeAttribute('src'); // Completely remove current source
+            ui.audio.load(); // Force reset the audio element state
+
+            ui.loader.classList.remove('hidden');
+            ui.verseText.style.opacity = '0.3';
+
+            const vStr = formatNum(verse);
+            const audioUrl = getAssetUrl(`${basePath}chapters/${chapter}/audio/${vStr}.mp3`);
+            const textUrl = getAssetUrl(`${basePath}chapters/${chapter}/text/${vStr}.txt`);
+
+            try {
+                const textRes = await fetch(textUrl);
+                if (!textRes.ok) throw new Error("Not Found");
+                const buffer = await textRes.arrayBuffer();
+                const text = new TextDecoder("utf-8").decode(buffer);
+                
+                ui.verseText.textContent = text;
+                ui.audio.src = audioUrl; // Assign new source
+                ui.audio.load(); // Prepare the new audio source
+                
+                currentVerse = verse;
+                localStorage.setItem('lastChapter', chapter);
+                localStorage.setItem('lastVerse', verse);
+
+                const totalDisplay = chapterAmounts[chapter] || "--";
+                ui.verseIndicator.textContent = `${currentVerse} / ${totalDisplay}`;
+                if (chapterAmounts[chapter]) {
+                    ui.progressBar.style.width = `${(currentVerse / chapterAmounts[chapter]) * 100}%`;
+                }
+
+                if (shouldAutoplay) {
+                    // Slight delay to ensure element state is clean before playing
+                    setTimeout(() => {
+                        ui.audio.play().catch(e => console.log("Autoplay blocked or failed", e));
+                    }, 50);
+                }
+                
+                preloadNext(chapter, verse);
+                ui.loader.classList.add('hidden');
+                ui.verseText.style.opacity = '1';
+
+            } catch (e) {
+                ui.loader.classList.add('hidden');
+                ui.verseText.style.opacity = '1';
+                if (verse > 1) ui.verseText.textContent = "نهاية السورة";
+            }
+        }
+
+        ui.chapterSelector.addEventListener('change', (e) => {
+            if (e.target.value) {
+                currentChapter = e.target.value;
+                currentVerse = 1;
+                loadVerse(currentChapter, 1);
+            }
+        });
+
+        ui.btnPlayPause.addEventListener('click', () => {
+            if (!ui.audio.src) return;
+            ui.audio.paused ? ui.audio.play() : ui.audio.pause();
+        });
+
+        ui.btnNext.addEventListener('click', () => {
+            if (currentChapter) loadVerse(currentChapter, currentVerse + 1);
+        });
+
+        ui.btnPrev.addEventListener('click', () => {
+            if (currentChapter && currentVerse > 1) loadVerse(currentChapter, currentVerse - 1);
+        });
+
+        ui.themeToggle.addEventListener('click', () => {
+            setTheme((currentThemeIndex + 1) % themes.length);
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (!currentChapter) return;
+            switch(e.code) {
+                case 'Space': e.preventDefault(); ui.audio.paused ? ui.audio.play() : ui.audio.pause(); break;
+                case 'ArrowRight': loadVerse(currentChapter, currentVerse + 1); break;
+                case 'ArrowLeft': if (currentVerse > 1) loadVerse(currentChapter, currentVerse - 1); break;
+            }
+        });
+
+        ui.audio.addEventListener('play', () => { ui.playIcon.classList.add('hidden'); ui.pauseIcon.classList.remove('hidden'); });
+        ui.audio.addEventListener('pause', () => { ui.playIcon.classList.remove('hidden'); ui.pauseIcon.classList.add('hidden'); });
+        ui.audio.addEventListener('ended', () => { /* Stays on current verse */ });
+
+        init();
+    </script>
+</body>
+</html>
