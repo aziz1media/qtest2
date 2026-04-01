@@ -78,6 +78,7 @@
             grid-template-columns: 1fr 1fr 1fr;
             height: 100px;
             width: 100%;
+            direction: ltr !important; /* Force layout direction to ensure Next is always Right */
         }
 
         .nav-btn {
@@ -91,6 +92,8 @@
             background: transparent;
             color: var(--text-color);
             -webkit-tap-highlight-color: transparent;
+            width: 100%;
+            height: 100%;
         }
 
         .nav-btn:active {
@@ -102,9 +105,9 @@
             color: white !important;
         }
 
-        #btnPrev { order: 1; border-left: 1px solid rgba(255,255,255,0.05); }
-        #btnPlayPause { order: 2; }
-        #btnNext { order: 3; border-right: 1px solid rgba(255,255,255,0.05); }
+        /* Border styling adjusted for forced LTR grid */
+        #btnLeft { border-right: 1px solid rgba(255,255,255,0.05); }
+        #btnRight { border-left: 1px solid rgba(255,255,255,0.05); }
 
         select, .theme-btn {
             background-color: rgba(255, 255, 255, 0.1);
@@ -154,16 +157,19 @@
 
     <footer class="controls-panel">
         <div class="footer-grid">
-            <button id="btnPrev" class="nav-btn" title="السابق (يسار)">
+            <!-- Left Button: Always Previous -->
+            <button id="btnLeft" class="nav-btn" title="السابق">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path></svg>
             </button>
 
+            <!-- Center Button: Play/Pause -->
             <button id="btnPlayPause" class="nav-btn play-pause-container" title="تشغيل/إيقاف">
                 <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="currentColor" viewBox="0 0 256 256"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.75a16,16,0,0,1-24.32-13.51V40a16,16,0,0,1,24.32-13.51L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path></svg>
                 <svg id="pauseIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z"></path></svg>
             </button>
 
-            <button id="btnNext" class="nav-btn" title="التالي (يمين)">
+            <!-- Right Button: Always Next -->
+            <button id="btnRight" class="nav-btn" title="التالي">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path></svg>
             </button>
         </div>
@@ -205,11 +211,10 @@
             "111": "المسد", "112": "الإخلاص", "113": "الفلق", "114": "الناس"
         };
 
-        const SESSION_ID = new Date().getTime(); // Unique per app launch
+        const SESSION_ID = new Date().getTime();
         let basePath = "";
         let currentChapter = localStorage.getItem('lastChapter') || "";
         let currentVerse = parseInt(localStorage.getItem('lastVerse')) || 1;
-        let totalVerses = 0;
         let chapterAmounts = {};
         let currentThemeIndex = parseInt(localStorage.getItem('currentThemeIndex')) || 0;
 
@@ -220,15 +225,14 @@
             progressBar: document.getElementById('progressBar'),
             audio: document.getElementById('audioPlayer'),
             btnPlayPause: document.getElementById('btnPlayPause'),
-            btnNext: document.getElementById('btnNext'),
-            btnPrev: document.getElementById('btnPrev'),
+            btnRight: document.getElementById('btnRight'),
+            btnLeft: document.getElementById('btnLeft'),
             playIcon: document.getElementById('playIcon'),
             pauseIcon: document.getElementById('pauseIcon'),
             loader: document.getElementById('loading'),
             themeToggle: document.getElementById('themeToggle')
         };
 
-        // Cache busting URLs - Force no-store for metadata
         const getMetaUrl = (file) => `${file}?cb=${SESSION_ID}`;
         const getAssetUrl = (file) => `${file}?v=${SESSION_ID}`;
 
@@ -269,7 +273,6 @@
                 setTheme(currentThemeIndex);
 
                 if (currentChapter) {
-                    totalVerses = chapterAmounts[currentChapter] || 0;
                     loadVerse(currentChapter, currentVerse, false);
                 }
 
@@ -303,10 +306,11 @@
         async function loadVerse(chapter, verse, shouldAutoplay = true) {
             if (!chapter) return;
             
-            // CLEAN SWITCH: Stop previous audio immediately
+            // FIX: Robust Audio Reset to stop glitches
             ui.audio.pause();
-            ui.audio.removeAttribute('src'); // Completely remove current source
-            ui.audio.load(); // Force reset the audio element state
+            ui.audio.currentTime = 0;
+            ui.audio.src = ""; // Clear source
+            ui.audio.load(); // Force reset internal buffer
 
             ui.loader.classList.remove('hidden');
             ui.verseText.style.opacity = '0.3';
@@ -322,8 +326,7 @@
                 const text = new TextDecoder("utf-8").decode(buffer);
                 
                 ui.verseText.textContent = text;
-                ui.audio.src = audioUrl; // Assign new source
-                ui.audio.load(); // Prepare the new audio source
+                ui.audio.src = audioUrl;
                 
                 currentVerse = verse;
                 localStorage.setItem('lastChapter', chapter);
@@ -336,10 +339,10 @@
                 }
 
                 if (shouldAutoplay) {
-                    // Slight delay to ensure element state is clean before playing
+                    // Slight delay to allow browser to clear old audio state fully
                     setTimeout(() => {
-                        ui.audio.play().catch(e => console.log("Autoplay blocked or failed", e));
-                    }, 50);
+                        ui.audio.play().catch(e => console.warn("Autoplay was prevented"));
+                    }, 100);
                 }
                 
                 preloadNext(chapter, verse);
@@ -366,11 +369,13 @@
             ui.audio.paused ? ui.audio.play() : ui.audio.pause();
         });
 
-        ui.btnNext.addEventListener('click', () => {
+        // FIXED: Next is on the RIGHT
+        ui.btnRight.addEventListener('click', () => {
             if (currentChapter) loadVerse(currentChapter, currentVerse + 1);
         });
 
-        ui.btnPrev.addEventListener('click', () => {
+        // FIXED: Prev is on the LEFT
+        ui.btnLeft.addEventListener('click', () => {
             if (currentChapter && currentVerse > 1) loadVerse(currentChapter, currentVerse - 1);
         });
 
@@ -382,14 +387,13 @@
             if (!currentChapter) return;
             switch(e.code) {
                 case 'Space': e.preventDefault(); ui.audio.paused ? ui.audio.play() : ui.audio.pause(); break;
-                case 'ArrowRight': loadVerse(currentChapter, currentVerse + 1); break;
-                case 'ArrowLeft': if (currentVerse > 1) loadVerse(currentChapter, currentVerse - 1); break;
+                case 'ArrowRight': ui.btnRight.click(); break;
+                case 'ArrowLeft': ui.btnLeft.click(); break;
             }
         });
 
         ui.audio.addEventListener('play', () => { ui.playIcon.classList.add('hidden'); ui.pauseIcon.classList.remove('hidden'); });
         ui.audio.addEventListener('pause', () => { ui.playIcon.classList.remove('hidden'); ui.pauseIcon.classList.add('hidden'); });
-        ui.audio.addEventListener('ended', () => { /* Stays on current verse */ });
 
         init();
     </script>
