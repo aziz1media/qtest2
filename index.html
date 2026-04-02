@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <!-- Cache-Control Meta Tags -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -26,6 +26,8 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             height: 100vh;
+            /* Support for mobile browsers that don't handle 100vh well with bars */
+            height: -webkit-fill-available; 
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -33,11 +35,16 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
+        header {
+            flex-shrink: 0;
+            padding-top: env(safe-area-inset-top, 1rem);
+        }
+
         .progress-container {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background-color: rgba(255, 255, 255, 0.1);
-            position: relative;
+            flex-shrink: 0;
         }
         .progress-bar {
             height: 100%;
@@ -52,33 +59,49 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
+            padding: 1rem;
             text-align: center;
-            overflow-y: auto;
+            overflow: hidden; /* Prevent scrolling of the whole page */
+        }
+
+        .verse-text-wrapper {
+            width: 100%;
+            max-height: 100%;
+            overflow-y: auto; /* Only the text itself can scroll if too long */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .verse-text {
-            font-size: clamp(1.8rem, 6vw, 3.2rem);
-            line-height: 2.2;
-            max-width: 1000px;
+            font-size: clamp(1.5rem, 5.5vw, 2.8rem);
+            line-height: 1.8;
+            max-width: 800px;
             transition: opacity 0.3s ease;
             word-wrap: break-word;
-            padding: 20px;
+            padding: 10px;
         }
 
         .controls-panel {
             background-color: var(--panel-bg);
-            box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
             z-index: 10;
             width: 100%;
+            flex-shrink: 0;
+            /* Lift the panel away from the very bottom */
+            padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem); 
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
         }
 
         .footer-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            height: 100px;
+            height: 80px;
             width: 100%;
-            direction: ltr !important; /* Force layout direction to ensure Next is always Right */
+            direction: ltr !important;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         .nav-btn {
@@ -86,35 +109,35 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: transform 0.1s;
             border: none;
             outline: none;
             background: transparent;
             color: var(--text-color);
             -webkit-tap-highlight-color: transparent;
-            width: 100%;
-            height: 100%;
         }
 
         .nav-btn:active {
-            background-color: rgba(255, 255, 255, 0.1);
+            transform: scale(0.92);
         }
 
         .play-pause-container {
             background-color: var(--accent-color) !important;
             color: white !important;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            margin: auto;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
         }
-
-        /* Border styling adjusted for forced LTR grid */
-        #btnLeft { border-right: 1px solid rgba(255,255,255,0.05); }
-        #btnRight { border-left: 1px solid rgba(255,255,255,0.05); }
 
         select, .theme-btn {
             background-color: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: var(--text-color);
-            padding: 0.6rem 1rem;
+            padding: 0.5rem 0.8rem;
             border-radius: 12px;
+            font-size: 0.9rem;
             font-weight: bold;
             outline: none;
         }
@@ -123,8 +146,8 @@
             border: 4px solid rgba(255, 255, 255, 0.1);
             border-top: 4px solid var(--accent-color);
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
         }
 
@@ -134,16 +157,16 @@
 </head>
 <body>
 
-    <header class="p-4 bg-transparent">
-        <div class="max-w-xl mx-auto flex items-center gap-2">
+    <header class="p-3">
+        <div class="max-w-md mx-auto flex items-center gap-2">
             <select id="chapterSelector" class="flex-grow">
                 <option value="">جاري التحميل...</option>
             </select>
             <button id="themeToggle" class="theme-btn" title="تغيير المظهر">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256"><path d="M128,72a56,56,0,1,0,56,56A56.06,56.06,0,0,0,128,72Zm0,96a40,40,0,1,1,40-40A40,40,0,0,1,128,168ZM128,48a8,8,0,0,1-8-8V24a8,8,0,0,1,16,0V40A8,8,0,0,1,128,48Zm0,184a8,8,0,0,1-8-8V200a8,8,0,0,1,16,0v16A8,8,0,0,1,128,232ZM56,128a8,8,0,0,1-8-8V104a8,8,0,0,1,16,0v16A8,8,0,0,1,56,128Zm152,0a8,8,0,0,1-8-8V104a8,8,0,0,1,16,0v16A8,8,0,0,1,208,128ZM62.63,62.63a8,8,0,0,1,0-11.32l16-16a8,8,0,0,1,11.32,11.32l-16,16A8,8,0,0,1,62.63,62.63Zm114.74,114.74a8,8,0,0,1,0-11.32l16-16a8,8,0,0,1,11.32,11.32l-16,16A8,8,0,0,1,177.37,177.37ZM62.63,193.37l16-16a8,8,0,0,1,11.32,11.32l-16,16a8,8,0,0,1-11.32-11.32ZM177.37,78.63l16-16a8,8,0,0,1,11.32,11.32l-16,16a8,8,0,0,1-11.32-11.32Z"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M128,72a56,56,0,1,0,56,56A56.06,56.06,0,0,0,128,72Zm0,96a40,40,0,1,1,40-40A40,40,0,0,1,128,168ZM128,48a8,8,0,0,1-8-8V24a8,8,0,0,1,16,0V40A8,8,0,0,1,128,48Zm0,184a8,8,0,0,1-8-8V200a8,8,0,0,1,16,0v16A8,8,0,0,1,128,232ZM56,128a8,8,0,0,1-8-8V104a8,8,0,0,1,16,0v16A8,8,0,0,1,56,128Zm152,0a8,8,0,0,1-8-8V104a8,8,0,0,1,16,0v16A8,8,0,0,1,208,128ZM62.63,62.63a8,8,0,0,1,0-11.32l16-16a8,8,0,0,1,11.32,11.32l-16,16A8,8,0,0,1,62.63,62.63Zm114.74,114.74a8,8,0,0,1,0-11.32l16-16a8,8,0,0,1,11.32,11.32l-16,16A8,8,0,0,1,177.37,177.37ZM62.63,193.37l16-16a8,8,0,0,1,11.32,11.32l-16,16a8,8,0,0,1-11.32-11.32ZM177.37,78.63l16-16a8,8,0,0,1,11.32,11.32l-16,16a8,8,0,0,1-11.32-11.32Z"></path></svg>
             </button>
         </div>
-        <div id="verseIndicator" class="text-center mt-3 text-lg opacity-80 font-bold">-- / --</div>
+        <div id="verseIndicator" class="text-center mt-2 text-md opacity-70 font-bold">-- / --</div>
     </header>
 
     <div class="progress-container">
@@ -152,25 +175,29 @@
 
     <main class="verse-container">
         <div id="loading" class="loader hidden"></div>
-        <div id="verseText" class="verse-text">الرجاء اختيار السورة الكريمة للبدء</div>
+        <div class="verse-text-wrapper">
+            <div id="verseText" class="verse-text">الرجاء اختيار السورة الكريمة للبدء</div>
+        </div>
     </main>
 
     <footer class="controls-panel">
         <div class="footer-grid">
             <!-- Left Button: Always Previous -->
             <button id="btnLeft" class="nav-btn" title="السابق">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 256 256"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path></svg>
             </button>
 
             <!-- Center Button: Play/Pause -->
-            <button id="btnPlayPause" class="nav-btn play-pause-container" title="تشغيل/إيقاف">
-                <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="currentColor" viewBox="0 0 256 256"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.75a16,16,0,0,1-24.32-13.51V40a16,16,0,0,1,24.32-13.51L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path></svg>
-                <svg id="pauseIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z"></path></svg>
+            <button id="btnPlayPause" class="nav-btn" title="تشغيل/إيقاف">
+                <div class="play-pause-container flex items-center justify-center">
+                    <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.75a16,16,0,0,1-24.32-13.51V40a16,16,0,0,1,24.32-13.51L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path></svg>
+                    <svg id="pauseIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z"></path></svg>
+                </div>
             </button>
 
             <!-- Right Button: Always Next -->
             <button id="btnRight" class="nav-btn" title="التالي">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 256 256"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path></svg>
             </button>
         </div>
     </footer>
@@ -306,11 +333,10 @@
         async function loadVerse(chapter, verse, shouldAutoplay = true) {
             if (!chapter) return;
             
-            // FIX: Robust Audio Reset to stop glitches
             ui.audio.pause();
             ui.audio.currentTime = 0;
-            ui.audio.src = ""; // Clear source
-            ui.audio.load(); // Force reset internal buffer
+            ui.audio.src = ""; 
+            ui.audio.load(); 
 
             ui.loader.classList.remove('hidden');
             ui.verseText.style.opacity = '0.3';
@@ -339,10 +365,9 @@
                 }
 
                 if (shouldAutoplay) {
-                    // Slight delay to allow browser to clear old audio state fully
                     setTimeout(() => {
                         ui.audio.play().catch(e => console.warn("Autoplay was prevented"));
-                    }, 100);
+                    }, 150);
                 }
                 
                 preloadNext(chapter, verse);
@@ -369,12 +394,10 @@
             ui.audio.paused ? ui.audio.play() : ui.audio.pause();
         });
 
-        // FIXED: Next is on the RIGHT
         ui.btnRight.addEventListener('click', () => {
             if (currentChapter) loadVerse(currentChapter, currentVerse + 1);
         });
 
-        // FIXED: Prev is on the LEFT
         ui.btnLeft.addEventListener('click', () => {
             if (currentChapter && currentVerse > 1) loadVerse(currentChapter, currentVerse - 1);
         });
