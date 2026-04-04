@@ -20,7 +20,7 @@
             --accent-color: #00b894;
             --panel-bg: #1e1e1e;
             --line-height: 1.8;
-            --max-lines: 7; /* Default fallback */
+            --max-lines: 7;
         }
 
         body {
@@ -36,24 +36,10 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        header {
-            flex-shrink: 0;
-            padding-top: env(safe-area-inset-top, 1rem);
-            z-index: 20;
-        }
+        header { flex-shrink: 0; padding-top: env(safe-area-inset-top, 1rem); z-index: 20; }
 
-        .progress-container {
-            width: 100%;
-            height: 6px;
-            background-color: rgba(255, 255, 255, 0.1);
-            flex-shrink: 0;
-        }
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background-color: var(--accent-color);
-            transition: width 0.3s ease;
-        }
+        .progress-container { width: 100%; height: 6px; background-color: rgba(255, 255, 255, 0.1); flex-shrink: 0; }
+        .progress-bar { height: 100%; width: 0%; background-color: var(--accent-color); transition: width 0.3s ease; }
 
         .verse-container {
             flex-grow: 1;
@@ -68,14 +54,12 @@
 
         .verse-text-wrapper {
             width: 100%;
-            /* Fixed height calculation: font-size * line-height * max-lines */
             height: calc(clamp(1.5rem, 5.5vw, 2.8rem) * var(--line-height) * var(--max-lines));
             max-width: 800px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            cursor: pointer;
             scrollbar-width: thin;
             scrollbar-color: var(--accent-color) transparent;
         }
@@ -83,10 +67,10 @@
         .verse-text {
             font-size: clamp(1.5rem, 5.5vw, 2.8rem);
             line-height: var(--line-height);
-            transition: opacity 0.3s ease;
             word-wrap: break-word;
             padding: 10px;
-            min-height: 1em;
+            width: 100%;
+            margin: auto 0;
         }
 
         .controls-panel {
@@ -96,205 +80,137 @@
             width: 100%;
             flex-shrink: 0;
             padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem); 
-            border-top-left-radius: 24px;
-            border-top-right-radius: 24px;
+            border-top-left-radius: 24px; border-top-right-radius: 24px;
         }
 
         .footer-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            height: 80px;
-            width: 100%;
+            height: 80px; width: 100%;
             direction: ltr !important;
-            max-width: 600px;
-            margin: 0 auto;
+            max-width: 600px; margin: 0 auto;
         }
 
         .nav-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.1s;
-            border: none;
-            outline: none;
-            background: transparent;
-            color: var(--text-color);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: transform 0.1s;
+            background: transparent; color: var(--text-color);
             -webkit-tap-highlight-color: transparent;
         }
-
         .nav-btn:active { transform: scale(0.92); }
 
         .play-pause-container {
             background-color: var(--accent-color) !important;
             color: white !important;
-            border-radius: 50%;
-            width: 64px;
-            height: 64px;
-            margin: auto;
-            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
+            border-radius: 50%; width: 64px; height: 64px;
+            margin: auto; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
         }
 
         select, .icon-btn {
             background-color: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: var(--text-color);
-            padding: 0.5rem 0.7rem;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            outline: none;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            padding: 0.5rem 0.7rem; border-radius: 12px;
+            font-size: 0.9rem; font-weight: bold; outline: none;
         }
 
-        /* Help Modal Styles */
+        /* Modal & Formatting Styles */
         #helpModal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-color);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color); z-index: 100;
+            display: flex; flex-direction: column;
             padding: env(safe-area-inset-top, 1rem) 1rem env(safe-area-inset-bottom, 1rem) 1rem;
-            transform: translateY(100%);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(100%); transition: transform 0.4s ease;
         }
-
         #helpModal.active { transform: translateY(0); }
+        .help-content { flex-grow: 1; overflow-y: auto; padding: 1rem; }
 
-        .help-content {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 1.5rem;
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-
-        .help-link {
-            color: var(--accent-color);
-            text-decoration: underline;
-            cursor: pointer;
-            font-weight: bold;
+        .help-link { color: var(--accent-color); text-decoration: underline; cursor: pointer; font-weight: bold; }
+        
+        /* Toast Notification */
+        #toast {
+            position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8); color: white;
+            padding: 10px 20px; border-radius: 20px; z-index: 200;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
 
         .loader {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid var(--accent-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+            border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid var(--accent-color);
+            border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;
         }
-
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden { display: none !important; }
+
+        /* Dynamic Classes for Parser */
+        .align-center { text-align: center !important; width: 100%; display: block; }
+        .align-right { text-align: right !important; width: 100%; display: block; }
+        .align-left { text-align: left !important; width: 100%; display: block; }
+        h1, h2, h3, h4, h5, h6 { font-weight: bold; margin: 0.5em 0; }
+        h1 { font-size: 2em; } h2 { font-size: 1.7em; } h3 { font-size: 1.5em; }
     </style>
 </head>
 <body>
 
     <header class="p-3">
         <div class="max-w-md mx-auto flex items-center justify-between gap-2">
-            <select id="chapterSelector" class="flex-grow">
-                <option value="">جاري التحميل...</option>
-            </select>
-            
+            <select id="chapterSelector" class="flex-grow"></select>
             <div class="flex gap-2">
-                <button id="btnHelp" class="icon-btn" title="اتصال">
-                    <span>اتصال</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z" opacity="0.2"></path><path d="M128,24a104,104,0,1,0,104,104A104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"></path></svg>
-                </button>
-                <button id="themeToggle" class="icon-btn" title="المظهر">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256"><path d="M128,72a56,56,0,1,0,56,56A56.06,56.06,0,0,0,128,72Zm0,96a40,40,0,1,1,40-40A40,40,0,0,1,128,168ZM128,48a8,8,0,0,1-8-8V24a8,8,0,0,1,16,0V40A8,8,0,0,1,128,48Zm0,184a8,8,0,0,1-8-8V200a8,8,0,0,1,16,0v16A8,8,0,0,1,128,232ZM56,128a8,8,0,0,1-8-8V104a8,8,0,0,1,16,0v16A8,8,0,0,1,56,128Zm152,0a8,8,0,0,1-8-8V104a8,8,0,0,1,16,0v16A8,8,0,0,1,208,128ZM62.63,62.63a8,8,0,0,1,0-11.32l16-16a8,8,0,0,1,11.32,11.32l-16,16A8,8,0,0,1,62.63,62.63Zm114.74,114.74a8,8,0,0,1,0-11.32l16-16a8,8,0,0,1,11.32,11.32l-16,16A8,8,0,0,1,177.37,177.37ZM62.63,193.37l16-16a8,8,0,0,1,11.32,11.32l-16,16a8,8,0,0,1-11.32-11.32ZM177.37,78.63l16-16a8,8,0,0,1,11.32,11.32l-16,16a8,8,0,0,1-11.32-11.32Z"></path></svg>
-                </button>
+                <button id="btnHelp" class="icon-btn" title="مساعدة">؟</button>
+                <button id="themeToggle" class="icon-btn">🎨</button>
             </div>
         </div>
         <div id="verseIndicator" class="text-center mt-2 text-md opacity-70 font-bold">-- / --</div>
     </header>
 
-    <div class="progress-container">
-        <div id="progressBar" class="progress-bar"></div>
-    </div>
+    <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
 
-    <main class="verse-container">
+    <main class="verse-container" id="verseArea">
         <div id="loading" class="loader hidden"></div>
         <div class="verse-text-wrapper" id="verseWrapper">
-            <div id="verseText" class="verse-text">الرجاء اختيار السورة الكريمة للبدء</div>
+            <div id="verseText" class="verse-text"></div>
         </div>
     </main>
 
     <footer class="controls-panel">
         <div class="footer-grid">
             <button id="btnLeft" class="nav-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 256 256"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path></svg>
+                <svg width="40" height="40" fill="currentColor" viewBox="0 0 256 256"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path></svg>
             </button>
             <button id="btnPlayPause" class="nav-btn">
                 <div class="play-pause-container flex items-center justify-center">
-                    <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.75a16,16,0,0,1-24.32-13.51V40a16,16,0,0,1,24.32-13.51L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path></svg>
-                    <svg id="pauseIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z"></path></svg>
+                    <svg id="playIcon" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.75a16,16,0,0,1-24.32-13.51V40a16,16,0,0,1,24.32-13.51L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path></svg>
+                    <svg id="pauseIcon" class="hidden" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z"></path></svg>
                 </div>
             </button>
             <button id="btnRight" class="nav-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 256 256"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path></svg>
+                <svg width="40" height="40" fill="currentColor" viewBox="0 0 256 256"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path></svg>
             </button>
         </div>
     </footer>
 
-    <!-- Help Modal Overlay -->
     <div id="helpModal">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold">المساعدة والاتصال</h2>
-            <button id="btnCloseHelp" class="icon-btn px-4 py-2 bg-red-500 text-white border-none">إغلاق</button>
+            <h2 class="text-xl font-bold">المساعدة</h2>
+            <button id="btnCloseHelp" class="icon-btn bg-red-500 text-white border-none">إغلاق</button>
         </div>
-        <div id="helpContent" class="help-content">جاري التحميل...</div>
+        <div id="helpContent" class="help-content"></div>
     </div>
 
+    <div id="toast">تم النسخ</div>
     <audio id="audioPlayer"></audio>
 
     <script>
         const themes = [
-            { name: 'Dark', bg: '#121212', text: '#E0E0E0', panel: '#1e1e1e' },
-            { name: 'Classic', bg: '#FAF3DD', text: '#000000', panel: '#f0e9d2' },
-            { name: 'Sepia', bg: '#F3E6D0', text: '#3B2417', panel: '#e6d8c0' },
-            { name: 'Yellow', bg: '#F9ECB6', text: '#061349', panel: '#eedf9f' }
+            { bg: '#121212', text: '#E0E0E0', panel: '#1e1e1e' },
+            { bg: '#FAF3DD', text: '#000000', panel: '#f0e9d2' },
+            { bg: '#F3E6D0', text: '#3B2417', panel: '#e6d8c0' },
+            { bg: '#F9ECB6', text: '#061349', panel: '#eedf9f' }
         ];
 
-        const chapterNames = {
-            "001": "الفاتحة", "002": "البقرة", "003": "آل عمران", "004": "النساء", "005": "المائدة",
-            "006": "الأنعام", "007": "الأعراف", "008": "الأنفال", "009": "التوبة", "010": "يونس",
-            "011": "هود", "012": "يوسف", "013": "الرعد", "014": "إبراهيم", "015": "الحجر",
-            "016": "النحل", "017": "الإسراء", "018": "الكهف", "019": "مريم", "020": "طه",
-            "021": "الأنبياء", "022": "الحج", "023": "المؤمنون", "024": "النور", "025": "الفرقان",
-            "026": "الشعراء", "027": "النمل", "028": "القصص", "029": "العنكبوت", "030": "الروم",
-            "031": "لقمان", "032": "السجدة", "033": "الأحزاب", "034": "سبأ", "035": "فاطر",
-            "036": "يس", "037": "الصافات", "038": "ص", "039": "الزمر", "040": "غافر",
-            "041": "فصلت", "042": "الشورى", "043": "الزخرف", "044": "الدخان", "045": "الجاثية",
-            "046": "الأحقاف", "047": "محمد", "048": "الفتح", "049": "الحجرات", "050": "ق",
-            "051": "الذاريات", "052": "الطور", "053": "النجم", "054": "القمر", "055": "الرحمن",
-            "056": "الواقعة", "057": "الحديد", "058": "المجادلة", "059": "الحشر", "060": "الممتحنة",
-            "061": "الصف", "062": "الجمعة", "063": "المنافقون", "064": "التغابن", "065": "الطلاق",
-            "066": "التحريم", "067": "الملك", "068": "القلم", "069": "الحاقة", "070": "المعارج",
-            "071": "نوح", "072": "الجن", "073": "المزمل", "074": "المدثر", "075": "القيامة",
-            "076": "الإنسان", "077": "المرسلات", "078": "النبأ", "079": "النازعات", "080": "عبس",
-            "081": "التكوير", "082": "الانفطار", "083": "المطففين", "084": "الانشقاق", "085": "البروج",
-            "086": "الطارق", "087": "الأعلى", "088": "الغاشية", "089": "الفجر", "090": "البلد",
-            "091": "الشمس", "092": "الليل", "093": "الضحى", "094": "الشرح", "095": "التين",
-            "096": "العلق", "097": "القدر", "098": "البينة", "099": "الزلزلة", "100": "العاديات",
-            "101": "القارعة", "102": "التكاثر", "103": "العصر", "104": "الهمزة", "105": "الفيل",
-            "106": "قريش", "107": "الماعون", "108": "الكوثر", "109": "الكافرون", "110": "النصر",
-            "111": "المسد", "112": "الإخلاص", "113": "الفلق", "114": "الناس"
-        };
-
-        const SESSION_ID = new Date().getTime();
-        let basePath = "";
-        let currentChapter = localStorage.getItem('lastChapter') || "";
-        let currentVerse = parseInt(localStorage.getItem('lastVerse')) || 1;
-        let chapterAmounts = {};
-        let currentThemeIndex = parseInt(localStorage.getItem('currentThemeIndex')) || 0;
+        let basePath = "", currentChapter = localStorage.getItem('lastChapter') || "", currentVerse = parseInt(localStorage.getItem('lastVerse')) || 0;
+        let chapterAmounts = {}, currentThemeIndex = parseInt(localStorage.getItem('currentThemeIndex')) || 0;
+        const SESSION = Date.now();
 
         const ui = {
             chapterSelector: document.getElementById('chapterSelector'),
@@ -304,188 +220,189 @@
             progressBar: document.getElementById('progressBar'),
             audio: document.getElementById('audioPlayer'),
             btnPlayPause: document.getElementById('btnPlayPause'),
-            btnRight: document.getElementById('btnRight'),
-            btnLeft: document.getElementById('btnLeft'),
             playIcon: document.getElementById('playIcon'),
             pauseIcon: document.getElementById('pauseIcon'),
             loader: document.getElementById('loading'),
             themeToggle: document.getElementById('themeToggle'),
             btnHelp: document.getElementById('btnHelp'),
-            btnCloseHelp: document.getElementById('btnCloseHelp'),
             helpModal: document.getElementById('helpModal'),
-            helpContent: document.getElementById('helpContent')
+            helpContent: document.getElementById('helpContent'),
+            toast: document.getElementById('toast')
         };
 
-        const getMetaUrl = (file) => `${file}?cb=${SESSION_ID}`;
-        const getAssetUrl = (file) => `${file}?v=${SESSION_ID}`;
+        const getUrl = (f) => `${f}?v=${SESSION}`;
 
         async function init() {
             try {
-                // 1. Fetch data.txt for path
-                let dataText = "";
-                try {
-                    const dataRes = await fetch(getMetaUrl('data.txt'), { cache: "no-store" });
-                    if (dataRes.ok) dataText = (await dataRes.text()).trim();
-                } catch (e) {}
-                basePath = (dataText === 'root' || dataText === '') ? '' : dataText;
+                // Fetch data.txt
+                const dRes = await fetch(getUrl('data.txt')).catch(()=>({ok:false}));
+                basePath = (dRes.ok ? (await dRes.text()).trim() : "") || "";
                 if (basePath && !basePath.endsWith('/')) basePath += '/';
 
-                // 2. Fetch size.txt for text area height
-                try {
-                    const sizeRes = await fetch(getMetaUrl(`${basePath}size.txt`), { cache: "no-store" });
-                    if (sizeRes.ok) {
-                        const s = (await sizeRes.text()).trim();
-                        if (!isNaN(s) && s !== "") {
-                            document.documentElement.style.setProperty('--max-lines', s);
+                // Fetch size.txt
+                const sRes = await fetch(getUrl(basePath + 'size.txt')).catch(()=>({ok:false}));
+                if (sRes.ok) document.documentElement.style.setProperty('--max-lines', (await sRes.text()).trim());
+
+                // Fetch amount.txt (Acts as the allowed folder list)
+                const aRes = await fetch(getUrl(basePath + 'amount.txt')).catch(()=>({ok:false}));
+                if (aRes.ok) {
+                    const lines = (await aRes.text()).split('\n');
+                    ui.chapterSelector.innerHTML = '<option value="">اختر السورة</option>';
+                    lines.forEach(l => {
+                        const [c, n] = l.trim().split(/\s+/);
+                        if (c && n) {
+                            chapterAmounts[c] = parseInt(n);
+                            const opt = document.createElement('option');
+                            opt.value = c; opt.textContent = c; // Or lookup name if preferred
+                            if (c === currentChapter) opt.selected = true;
+                            ui.chapterSelector.appendChild(opt);
                         }
-                    }
-                } catch (e) {}
-
-                // 3. Fetch chapter mapping
-                try {
-                    const amountRes = await fetch(getMetaUrl(`${basePath}amount.txt`), { cache: "no-store" });
-                    if (amountRes.ok) {
-                        const text = await amountRes.text();
-                        text.split(/\r?\n/).forEach(line => {
-                            const [code, amount] = line.trim().split(/\s+/);
-                            if (code && amount) chapterAmounts[code] = parseInt(amount);
-                        });
-                    }
-                } catch (e) {}
-
-                // 4. Allowed chapters
-                const allowedRes = await fetch(getMetaUrl(`${basePath}allowed.txt`), { cache: "no-store" });
-                const allowedChapters = (await allowedRes.text()).split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
-
-                ui.chapterSelector.innerHTML = '<option value="">اختر السورة</option>';
-                allowedChapters.forEach(code => {
-                    const option = document.createElement('option');
-                    option.value = code;
-                    option.textContent = chapterNames[code] || `سورة ${code}`;
-                    if (code === currentChapter) option.selected = true;
-                    ui.chapterSelector.appendChild(option);
-                });
+                    });
+                }
 
                 setTheme(currentThemeIndex);
-                if (currentChapter) loadVerse(currentChapter, currentVerse, false);
 
-            } catch (error) {
-                ui.verseText.textContent = "خطأ في التحميل - يرجى تحديث الصفحة";
+                if (!currentChapter) {
+                    displayFormattedFile('help/start.txt');
+                } else {
+                    loadVerse(currentChapter, currentVerse || 1, false);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function setTheme(i) {
+            const t = themes[i];
+            document.documentElement.style.setProperty('--bg-color', t.bg);
+            document.documentElement.style.setProperty('--text-color', t.text);
+            document.documentElement.style.setProperty('--panel-bg', t.panel);
+            localStorage.setItem('currentThemeIndex', i);
+            currentThemeIndex = i;
+        }
+
+        function parseCustomFormatting(text) {
+            let currentAlign = 'align-right';
+            const lines = text.split('\n');
+            let html = "";
+
+            lines.forEach(line => {
+                let l = line.trim();
+                if (!l) return;
+
+                // Alignment tags
+                if (l === '(T:S)') { currentAlign = 'align-center'; return; }
+                if (l === '(T:R)') { currentAlign = 'align-right'; return; }
+                if (l === '(T:L)') { currentAlign = 'align-left'; return; }
+
+                // Heading tags
+                const hMatch = l.match(/^\(H([1-6]):\s*(.*)\)$/);
+                if (hMatch) {
+                    html += `<h${hMatch[1]} class="${currentAlign}">${hMatch[2]}</h${hMatch[1]}>`;
+                    return;
+                }
+
+                // Link Patterns
+                l = l.replace(/\((.*?) --- (http.*?)\)/g, '<a href="$2" target="_blank" class="help-link">$1</a>');
+                l = l.replace(/\((.*?) --- root:(.*?)\)/g, '<span onclick="openHelpFile(\'$2\')" class="help-link">$1</span>');
+
+                html += `<div class="${currentAlign}">${l}</div>`;
+            });
+            return html;
+        }
+
+        async function displayFormattedFile(path, target = ui.verseText) {
+            try {
+                const res = await fetch(getUrl(basePath + path));
+                if (!res.ok) return;
+                const buffer = await res.arrayBuffer();
+                const text = new TextDecoder("utf-8").decode(buffer);
+                target.innerHTML = parseCustomFormatting(text);
+                ui.verseWrapper.scrollTop = 0;
+            } catch (e) { target.innerHTML = "خطأ في تحميل الملف"; }
+        }
+
+        window.openHelpFile = (num) => {
+            displayFormattedFile(`help/${num}.txt`, ui.helpContent);
+        };
+
+        async function loadVerse(c, v, play = true) {
+            if (!c || v < 1) return;
+            if (v > chapterAmounts[c]) {
+                displayFormattedFile('help/end.txt');
+                ui.audio.pause();
+                return;
             }
-        }
-
-        function setTheme(index) {
-            const theme = themes[index];
-            document.documentElement.style.setProperty('--bg-color', theme.bg);
-            document.documentElement.style.setProperty('--text-color', theme.text);
-            document.documentElement.style.setProperty('--panel-bg', theme.panel);
-            currentThemeIndex = index;
-            localStorage.setItem('currentThemeIndex', index);
-        }
-
-        async function loadVerse(chapter, verse, shouldAutoplay = true) {
-            if (!chapter) return;
-            
-            ui.audio.pause();
-            ui.audio.src = ""; 
-            ui.audio.load(); 
 
             ui.loader.classList.remove('hidden');
             ui.verseText.style.opacity = '0.3';
 
-            const vStr = verse.toString().padStart(3, '0');
-            const audioUrl = getAssetUrl(`${basePath}chapters/${chapter}/audio/${vStr}.mp3`);
-            const textUrl = getAssetUrl(`${basePath}chapters/${chapter}/text/${vStr}.txt`);
+            const vStr = v.toString().padStart(3, '0');
+            const txtUrl = getUrl(`${basePath}chapters/${c}/text/${vStr}.txt`);
+            const audUrl = getUrl(`${basePath}chapters/${c}/audio/${vStr}.mp3`);
 
             try {
-                const textRes = await fetch(textUrl);
-                const buffer = await textRes.arrayBuffer();
-                const text = new TextDecoder("utf-8").decode(buffer);
-                
-                ui.verseText.textContent = text;
-                ui.audio.src = audioUrl;
-                ui.verseWrapper.scrollTop = 0;
-                
-                currentVerse = verse;
-                localStorage.setItem('lastChapter', chapter);
-                localStorage.setItem('lastVerse', verse);
-
-                const totalDisplay = chapterAmounts[chapter] || "--";
-                ui.verseIndicator.textContent = `${currentVerse} / ${totalDisplay}`;
-                if (chapterAmounts[chapter]) {
-                    ui.progressBar.style.width = `${(currentVerse / chapterAmounts[chapter]) * 100}%`;
-                }
-
-                if (shouldAutoplay) {
-                    setTimeout(() => ui.audio.play().catch(()=>{}), 150);
-                }
-                
-                ui.loader.classList.add('hidden');
-                ui.verseText.style.opacity = '1';
-            } catch (e) {
-                ui.loader.classList.add('hidden');
-                ui.verseText.style.opacity = '1';
-                if (verse > 1) ui.verseText.textContent = "نهاية السورة";
-            }
-        }
-
-        // Help System Logic
-        async function loadHelp(fileNum = "1") {
-            ui.helpContent.innerHTML = "جاري التحميل...";
-            try {
-                const res = await fetch(getMetaUrl(`${basePath}help/${fileNum}.txt`));
-                if (!res.ok) throw new Error();
+                const res = await fetch(txtUrl);
                 const buffer = await res.arrayBuffer();
-                let text = new TextDecoder("utf-8").decode(buffer);
-
-                // Convert patterns
-                // 1. External Links: (Label --- URL)
-                text = text.replace(/\((.*?) --- (http.*?)\)/g, '<a href="$2" target="_blank" class="help-link">$1</a>');
+                ui.verseText.textContent = new TextDecoder("utf-8").decode(buffer);
                 
-                // 2. Internal Links: (Label --- root:N)
-                text = text.replace(/\((.*?) --- root:(.*?)\)/g, '<span onclick="loadHelp(\'$2\')" class="help-link">$1</span>');
+                ui.audio.src = audUrl;
+                currentVerse = v;
+                currentChapter = c;
+                localStorage.setItem('lastChapter', c);
+                localStorage.setItem('lastVerse', v);
 
-                // Preserve line breaks
-                ui.helpContent.innerHTML = text.replace(/\n/g, '<br>');
-            } catch (e) {
-                ui.helpContent.textContent = "عذراً، تعذر تحميل محتوى المساعدة.";
+                ui.verseIndicator.textContent = `${v} / ${chapterAmounts[c] || '--'}`;
+                ui.progressBar.style.width = `${(v / chapterAmounts[c]) * 100}%`;
+
+                if (play) ui.audio.play().catch(() => {});
+                
+                ui.loader.classList.add('hidden');
+                ui.verseText.style.opacity = '1';
+
+                // Preload next 3
+                for (let i = 1; i <= 3; i++) {
+                    const nextV = (v + i).toString().padStart(3, '0');
+                    if (v + i <= chapterAmounts[c]) {
+                        fetch(getUrl(`${basePath}chapters/${c}/text/${nextV}.txt`));
+                        fetch(getUrl(`${basePath}chapters/${c}/audio/${nextV}.mp3`));
+                    }
+                }
+            } catch (e) { 
+                ui.loader.classList.add('hidden');
+                ui.verseText.style.opacity = '1';
             }
         }
 
-        // Event Listeners
-        ui.chapterSelector.addEventListener('change', (e) => {
-            if (e.target.value) {
-                currentChapter = e.target.value;
-                currentVerse = 1;
-                loadVerse(currentChapter, 1);
-            }
-        });
+        async function copyVerseInfo() {
+            try {
+                const cRes = await fetch(getUrl(basePath + 'copy.txt'));
+                const prefix = cRes.ok ? (await cRes.text()).trim() : "";
+                const str = `${prefix} chapter ${currentChapter}, verse ${currentVerse}`;
+                
+                const el = document.createElement('textarea');
+                el.value = str; document.body.appendChild(el);
+                el.select(); document.execCommand('copy');
+                document.body.removeChild(el);
 
-        ui.btnPlayPause.addEventListener('click', () => {
-            if (ui.audio.src) ui.audio.paused ? ui.audio.play() : ui.audio.pause();
-        });
+                const sRes = await fetch(getUrl('successfullyCopied.txt'));
+                ui.toast.textContent = sRes.ok ? (await sRes.text()).trim() : "تم النسخ";
+                ui.toast.style.opacity = '1';
+                setTimeout(() => ui.toast.style.opacity = '0', 2000);
+            } catch (e) {}
+        }
 
-        ui.btnRight.addEventListener('click', () => {
-            if (currentChapter) loadVerse(currentChapter, currentVerse + 1);
-        });
+        // Listeners
+        ui.chapterSelector.onchange = (e) => { if(e.target.value) loadVerse(e.target.value, 1); };
+        ui.btnPlayPause.onclick = () => ui.audio.paused ? ui.audio.play() : ui.audio.pause();
+        ui.btnRight.onclick = () => loadVerse(currentChapter, currentVerse + 1);
+        ui.btnLeft.onclick = () => { if(currentVerse > 1) loadVerse(currentChapter, currentVerse - 1); };
+        ui.themeToggle.onclick = () => setTheme((currentThemeIndex + 1) % themes.length);
+        ui.btnHelp.onclick = () => { ui.helpModal.classList.add('active'); openHelpFile('1'); };
+        document.getElementById('btnCloseHelp').onclick = () => ui.helpModal.classList.remove('active');
+        ui.verseWrapper.onclick = () => { if(currentChapter) copyVerseInfo(); };
 
-        ui.btnLeft.addEventListener('click', () => {
-            if (currentChapter && currentVerse > 1) loadVerse(currentChapter, currentVerse - 1);
-        });
-
-        ui.themeToggle.addEventListener('click', () => setTheme((currentThemeIndex + 1) % themes.length));
-
-        ui.btnHelp.addEventListener('click', () => {
-            ui.helpModal.classList.add('active');
-            loadHelp("1");
-        });
-
-        ui.btnCloseHelp.addEventListener('click', () => {
-            ui.helpModal.classList.remove('active');
-        });
-
-        ui.audio.addEventListener('play', () => { ui.playIcon.classList.add('hidden'); ui.pauseIcon.classList.remove('hidden'); });
-        ui.audio.addEventListener('pause', () => { ui.playIcon.classList.remove('hidden'); ui.pauseIcon.classList.add('hidden'); });
+        ui.audio.onplay = () => { ui.playIcon.classList.add('hidden'); ui.pauseIcon.classList.remove('hidden'); };
+        ui.audio.onpause = () => { ui.playIcon.classList.remove('hidden'); ui.pauseIcon.classList.add('hidden'); };
+        ui.audio.onended = () => loadVerse(currentChapter, currentVerse + 1);
 
         init();
     </script>
