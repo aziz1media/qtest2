@@ -1,322 +1,409 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>قارئ القرآن الكريم</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>القرآن الكريم</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Amiri&family=Noto+Sans+Arabic:wght@400;700&display=swap');
-        
-        body {
-            font-family: 'Noto Sans Arabic', 'Amiri', serif;
-            background-color: #f1f5f9;
-            user-select: none;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align to top */
-            min-height: 100vh;
-            margin: 0;
-            padding-top: 2rem;
+        :root {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #cbb26a;
+            --border-color: #333;
+            --button-hover: #2a2a2a;
         }
 
-        .main-card {
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        #app {
             width: 100%;
-            max-width: 500px;
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            background-color: var(--container-bg);
+            height: 100%;
             display: flex;
             flex-direction: column;
-            border: 1px solid #e2e8f0;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        .verse-container {
-            transition: all 0.3s ease;
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 transparent;
+        /* Top Section */
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            background-color: #252525;
+            color: var(--accent-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1.1rem;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .status-info {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-color);
+            transition: width 0.1s linear;
+        }
+
+        /* Middle Section */
+        .viewer {
+            flex: 1;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
         }
 
-        .verse-container::-webkit-scrollbar { width: 6px; }
-        .verse-container::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 10px;
+        #verse-text-container {
+            width: 100%;
+            text-align: center;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 1.5rem;
+            line-height: 1.6;
+            cursor: pointer;
+            transition: background 0.2s;
+            padding: 10px;
+            border-radius: 8px;
         }
 
-        .toast {
+        #verse-text-container:active {
+            background: rgba(203, 178, 106, 0.1);
+        }
+
+        /* Bottom Section */
+        .controls {
+            display: flex;
+            width: 100%;
+            border-top: 1px solid var(--border-color);
+            background: #181818;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 25px 0;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .control-btn:hover {
+            background-color: var(--button-hover);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .play-btn {
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Toast Message */
+        #toast {
             position: fixed;
-            bottom: 2rem;
+            bottom: 100px;
             left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: none;
             z-index: 100;
         }
 
-        .toast.show { transform: translateX(-50%) translateY(0); }
-
-        select {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: left 1rem center;
-            background-size: 1.2em;
+        /* Custom Scrollbar */
+        #verse-text-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        #verse-text-container::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
 
-    <div class="main-card overflow-hidden">
-        <!-- Top Section: Dropdown & Status -->
-        <div class="p-5 space-y-4 border-b border-slate-100">
-            <select id="chapterSelect" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-xl font-bold text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
-                <option value="">جاري التحميل...</option>
-            </select>
-
-            <div id="statusInfo" class="flex justify-between items-center text-sm font-bold text-slate-500 px-1 opacity-0 transition-opacity">
-                <span id="verseCounter">0 / 0</span>
-                <span id="chapterNameDisplay">--</span>
-            </div>
-
-            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                <div id="progressBar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
-            </div>
-        </div>
-
-        <!-- Middle Section: Verse Display -->
-        <div class="p-5 flex-grow bg-slate-50/30">
-            <div id="verseBox" class="verse-container w-full bg-white border border-slate-200 rounded-2xl p-6 text-center cursor-pointer hover:border-emerald-400 transition-all overflow-y-auto shadow-sm">
-                <p id="verseText" class="text-3xl leading-relaxed text-slate-800 font-medium rtl"></p>
-            </div>
-        </div>
-
-        <!-- Bottom Section: Controls (3 Equal Parts) -->
-        <div class="flex items-center border-t border-slate-100">
-            <button id="prevBtn" class="w-1/3 py-6 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-emerald-600 hover:bg-slate-50 transition-all disabled:opacity-20 disabled:hover:bg-transparent">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                <span class="text-[10px] font-black uppercase tracking-widest">السابق</span>
-            </button>
-
-            <button id="playPauseBtn" class="w-1/3 py-6 border-x border-slate-100 flex flex-col items-center justify-center gap-1 text-emerald-600 hover:bg-emerald-50 transition-all">
-                <div id="btnIconContainer">
-                    <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    <svg id="pauseIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                </div>
-                <span id="playLabel" class="text-[10px] font-black uppercase tracking-widest">تشغيل</span>
-            </button>
-
-            <button id="nextBtn" class="w-1/3 py-6 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-emerald-600 hover:bg-slate-50 transition-all disabled:opacity-20 disabled:hover:bg-transparent">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                <span class="text-[10px] font-black uppercase tracking-widest">التالي</span>
-            </button>
+<div id="app">
+    <div class="header">
+        <select id="chapter-select">
+            <option value="">اختر سورة</option>
+        </select>
+        <div class="status-info" id="verse-status">-- / --</div>
+        <div class="progress-container">
+            <div id="progress-bar"></div>
         </div>
     </div>
 
-    <div id="toast" class="toast bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl text-base font-bold"></div>
-    <audio id="audioPlayer" class="hidden"></audio>
+    <div class="viewer">
+        <div id="verse-text-container">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+    </div>
 
-    <script>
-        const state = {
-            chapters: [],
-            allowedChapters: [],
-            currentChapter: null,
-            currentVerse: 1,
-            baseUrl: '',
-            remoteMode: false,
-            localOverrides: [],
-            config: { amount: '', size: 5, copyPrefix: '', copyDone: '' }
-        };
+    <div class="controls">
+        <button class="control-btn" id="prev-btn">السابق</button>
+        <button class="control-btn play-btn" id="play-btn">تشغيل</button>
+        <button class="control-btn" id="next-btn">التالي</button>
+    </div>
+</div>
 
-        const els = {
-            chapterSelect: document.getElementById('chapterSelect'),
-            verseCounter: document.getElementById('verseCounter'),
-            chapterNameDisplay: document.getElementById('chapterNameDisplay'),
-            progressBar: document.getElementById('progressBar'),
-            verseBox: document.getElementById('verseBox'),
-            verseText: document.getElementById('verseText'),
-            playPauseBtn: document.getElementById('playPauseBtn'),
-            playIcon: document.getElementById('playIcon'),
-            pauseIcon: document.getElementById('pauseIcon'),
-            playLabel: document.getElementById('playLabel'),
-            prevBtn: document.getElementById('prevBtn'),
-            nextBtn: document.getElementById('nextBtn'),
-            audioPlayer: document.getElementById('audioPlayer'),
-            statusInfo: document.getElementById('statusInfo'),
-            toast: document.getElementById('toast')
-        };
+<div id="toast"></div>
 
-        async function fetchFile(filename, isOptional = false) {
-            let url = (state.remoteMode && !state.localOverrides.includes(filename)) 
-                      ? state.baseUrl + filename 
-                      : filename;
-            try {
-                const response = await fetch(url + '?t=' + Date.now()); // Prevent cache
-                if (!response.ok) throw new Error();
-                return await response.text();
-            } catch (err) {
-                return isOptional ? null : "";
+<script>
+    // Configuration & State
+    let config = {
+        baseURL: '',
+        overrides: new Set(),
+        chapters: [], // {id, total, name}
+        currentChapter: null,
+        currentVerse: 1,
+        lineSize: 5,
+        copyPrefix: '',
+        copyDoneMsg: ''
+    };
+
+    const audio = new Audio();
+    const chapterSelect = document.getElementById('chapter-select');
+    const verseStatus = document.getElementById('verse-status');
+    const progressBar = document.getElementById('progress-bar');
+    const verseContainer = document.getElementById('verse-text-container');
+    const playBtn = document.getElementById('play-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const toast = document.getElementById('toast');
+
+    // Helper: Pad numbers (1 -> 001)
+    const pad = (num) => String(num).padStart(3, '0');
+
+    // Helper: Fetch with fallback logic
+    async function smartFetch(filename, isLocalOverride = false) {
+        const path = (config.baseURL && !config.overrides.has(filename) && !isLocalOverride) 
+            ? `${config.baseURL}${filename}` 
+            : filename;
+        
+        try {
+            const resp = await fetch(path);
+            if (!resp.ok) throw new Error('Not found');
+            return await resp.text();
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Initialize App
+    async function init() {
+        // 1. Check data.txt for remote mode
+        const dataTxt = await smartFetch('data.txt', true);
+        if (dataTxt) {
+            const lines = dataTxt.split('\n').map(l => l.trim()).filter(l => l);
+            if (lines.length > 0) {
+                config.baseURL = lines[0].endsWith('/') ? lines[0] : lines[0] + '/';
+                for (let i = 1; i < lines.length; i++) {
+                    config.overrides.add(lines[i]);
+                }
             }
         }
 
-        async function init() {
-            // 1. Data Mode
-            const dataTxt = await fetch('data.txt?t=' + Date.now()).then(r => r.text()).catch(() => null);
-            if (dataTxt && dataTxt.trim()) {
-                const lines = dataTxt.split('\n').map(l => l.trim()).filter(l => l);
-                state.remoteMode = true;
-                state.baseUrl = lines[0].endsWith('/') ? lines[0] : lines[0] + '/';
-                state.localOverrides = lines.slice(1);
-            }
-
-            // 2. Load Configs
-            const [amountData, sizeData, allowedData, copyData, copyDoneData] = await Promise.all([
-                fetchFile('amount.txt'),
-                fetchFile('size.txt'),
-                fetchFile('allowed.txt', true),
-                fetchFile('copy.txt'),
-                fetchFile('copy done.txt')
-            ]);
-
-            // Parse size first for UI
-            if (sizeData) {
-                state.config.size = parseInt(sizeData.trim()) || 5;
-                els.verseBox.style.height = (state.config.size * 2.2) + 'rem';
-            }
-
-            // Parse Chapters
-            if (amountData) {
-                state.chapters = amountData.split('\n')
-                    .map(l => l.trim())
-                    .filter(l => l)
-                    .map(line => {
-                        const parts = line.split(/\s+/);
-                        return { num: parts[0], count: parseInt(parts[1]), name: parts.slice(2).join(' ') };
-                    });
-            }
-
-            // Parse Allowed
-            if (allowedData) {
-                state.allowedChapters = allowedData.split('\n').map(l => l.trim()).filter(l => l);
-            }
-
-            state.config.copyPrefix = copyData ? copyData.trim() : '';
-            state.config.copyDone = copyDoneData ? copyDoneData.trim() : 'تم النسخ';
-
-            renderDropdown();
+        // 2. Load basic configs
+        const sizeTxt = await smartFetch('size.txt');
+        if (sizeTxt) {
+            config.lineSize = parseInt(sizeTxt.trim()) || 5;
+            // Set fixed height based on line size (approx 1.6em line height)
+            verseContainer.style.maxHeight = `${config.lineSize * 1.6}em`;
+            verseContainer.style.minHeight = `${config.lineSize * 1.6}em`;
         }
 
-        function renderDropdown() {
-            els.chapterSelect.innerHTML = '<option value="">اختر سورة</option>';
-            
-            // Logic: Use allowed.txt if it has items, otherwise use all from amount.txt
-            const list = (state.allowedChapters.length > 0)
-                ? state.chapters.filter(c => state.allowedChapters.includes(c.num))
-                : state.chapters;
+        const copyTxt = await smartFetch('copy.txt');
+        config.copyPrefix = copyTxt ? copyTxt.trim() : '';
 
-            if (list.length === 0 && state.chapters.length > 0 && state.allowedChapters.length > 0) {
-                // Debug fallback: if allowed was provided but matched nothing
-                console.warn("Allowed list didn't match any chapters in amount.txt");
-            }
+        const copyDoneTxt = await smartFetch('copy done.txt');
+        config.copyDoneMsg = copyDoneTxt ? copyDoneTxt.trim() : 'تم النسخ';
 
-            list.forEach(ch => {
-                const opt = document.createElement('option');
-                opt.value = ch.num;
-                opt.textContent = ch.name;
-                els.chapterSelect.appendChild(opt);
-            });
+        // 3. Load Chapters (amount.txt)
+        const amountTxt = await smartFetch('amount.txt');
+        if (!amountTxt) {
+            showToast("خطأ: تعذر تحميل ملف amount.txt");
+            return;
         }
 
-        async function loadVerse(chapterNum, verseNum) {
-            const chapter = state.chapters.find(c => c.num === chapterNum);
-            if (!chapter) return;
-
-            state.currentVerse = verseNum;
-            state.currentChapter = chapter;
-
-            els.statusInfo.style.opacity = "1";
-            els.verseCounter.textContent = `${verseNum} / ${chapter.count}`;
-            els.chapterNameDisplay.textContent = chapter.name;
-            els.progressBar.style.width = `${(verseNum / chapter.count) * 100}%`;
-            
-            els.prevBtn.disabled = verseNum <= 1;
-            els.nextBtn.disabled = verseNum >= chapter.count;
-
-            const padV = verseNum.toString().padStart(3, '0');
-            const textPath = `chapters/${chapterNum}/text/${padV}.txt`;
-            const audioPath = `chapters/${chapterNum}/audio/${padV}.mp3`;
-
-            // Text Loading
-            els.verseText.textContent = "جاري التحميل...";
-            const text = await fetchFile(textPath);
-            els.verseText.textContent = text || `[النص غير متوفر: آية ${verseNum}]`;
-            els.verseBox.scrollTop = 0;
-
-            // Audio Loading
-            stopPlayback();
-            els.audioPlayer.src = (state.remoteMode && !state.localOverrides.includes('chapters')) 
-                                  ? state.baseUrl + audioPath 
-                                  : audioPath;
-        }
-
-        function stopPlayback() {
-            els.audioPlayer.pause();
-            els.playIcon.classList.remove('hidden');
-            els.pauseIcon.classList.add('hidden');
-            els.playLabel.textContent = "تشغيل";
-        }
-
-        function togglePlayback() {
-            if (!state.currentChapter) return;
-            if (els.audioPlayer.paused) {
-                els.audioPlayer.play().catch(() => {
-                    showToast("ملف الصوت غير متوفر");
-                });
-                els.playIcon.classList.add('hidden');
-                els.pauseIcon.classList.remove('hidden');
-                els.playLabel.textContent = "إيقاف";
-            } else {
-                stopPlayback();
-            }
-        }
-
-        function showToast(msg) {
-            els.toast.textContent = msg;
-            els.toast.classList.add('show');
-            setTimeout(() => els.toast.classList.remove('show'), 2000);
-        }
-
-        els.chapterSelect.addEventListener('change', (e) => {
-            if (e.target.value) loadVerse(e.target.value, 1);
+        const chapterData = amountTxt.split('\n').filter(l => l.trim()).map(line => {
+            const parts = line.trim().split(/\s+/);
+            return {
+                id: parts[0],
+                total: parseInt(parts[1]),
+                name: parts.slice(2).join(' ')
+            };
         });
 
-        els.playPauseBtn.addEventListener('click', togglePlayback);
-        els.nextBtn.addEventListener('click', () => {
-            if (state.currentChapter && state.currentVerse < state.currentChapter.count) {
-                loadVerse(state.currentChapter.num, state.currentVerse + 1);
-            }
-        });
-        els.prevBtn.addEventListener('click', () => {
-            if (state.currentChapter && state.currentVerse > 1) {
-                loadVerse(state.currentChapter.num, state.currentVerse - 1);
-            }
-        });
-        els.verseBox.addEventListener('click', () => {
-            if (!state.currentChapter) return;
-            const text = `${state.config.copyPrefix} ${state.currentChapter.num} ${state.currentChapter.name} ${state.currentVerse}`;
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            showToast(state.config.copyDone);
-        });
+        // 4. Filter by allowed.txt if exists
+        const allowedTxt = await smartFetch('allowed.txt');
+        let allowedList = null;
+        if (allowedTxt) {
+            allowedList = new Set(allowedTxt.split('\n').map(l => l.trim()).filter(l => l));
+        }
 
-        els.audioPlayer.addEventListener('ended', stopPlayback);
+        // Build Dropdown
+        config.chapters = chapterData.filter(ch => !allowedList || allowedList.has(ch.id));
+        config.chapters.forEach(ch => {
+            const opt = document.createElement('option');
+            opt.value = ch.id;
+            opt.textContent = ch.name;
+            chapterSelect.appendChild(opt);
+        });
+    }
 
-        window.addEventListener('DOMContentLoaded', init);
-    </script>
+    // Load Verse Content
+    async function loadVerse() {
+        if (!config.currentChapter) return;
+
+        const chId = config.currentChapter.id;
+        const vId = pad(config.currentVerse);
+        
+        verseStatus.textContent = `${config.currentVerse} / ${config.currentChapter.total}`;
+        
+        // Load Text
+        const textPath = `chapters/${chId}/text/${vId}.txt`;
+        const textContent = await smartFetch(textPath);
+        verseContainer.textContent = textContent || "...";
+
+        // Update Audio Source
+        const audioPath = `chapters/${chId}/audio/${vId}.mp3`;
+        const fullAudioPath = config.baseURL ? `${config.baseURL}${audioPath}` : audioPath;
+        
+        audio.src = fullAudioPath;
+        audio.load();
+        updateUI();
+    }
+
+    function updateUI() {
+        playBtn.textContent = audio.paused ? "تشغيل" : "إيقاف";
+        progressBar.style.width = '0%';
+        
+        // Disable buttons at boundaries
+        prevBtn.disabled = !config.currentChapter || config.currentVerse === 1;
+        nextBtn.disabled = !config.currentChapter || config.currentVerse === config.currentChapter.total;
+    }
+
+    // Events
+    chapterSelect.addEventListener('change', (e) => {
+        const id = e.target.value;
+        if (!id) return;
+        
+        config.currentChapter = config.chapters.find(c => c.id === id);
+        config.currentVerse = 1;
+        loadVerse();
+    });
+
+    playBtn.addEventListener('click', () => {
+        if (!config.currentChapter) return;
+        if (audio.paused) {
+            audio.play().catch(e => console.error("Playback failed", e));
+        } else {
+            audio.pause();
+        }
+        updateUI();
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (config.currentChapter && config.currentVerse < config.currentChapter.total) {
+            config.currentVerse++;
+            loadVerse();
+        }
+    });
+
+    prevBtn.addEventListener('click', () => {
+        if (config.currentChapter && config.currentVerse > 1) {
+            config.currentVerse--;
+            loadVerse();
+        }
+    });
+
+    audio.addEventListener('timeupdate', () => {
+        if (audio.duration) {
+            const pct = (audio.currentTime / audio.duration) * 100;
+            progressBar.style.width = `${pct}%`;
+        }
+    });
+
+    audio.addEventListener('ended', () => {
+        updateUI(); // Resets play button text, does not auto-advance
+    });
+
+    // Copy Feature
+    verseContainer.addEventListener('click', () => {
+        if (!config.currentChapter) return;
+
+        const copyString = `${config.copyPrefix} ${config.currentChapter.id} ${config.currentChapter.name} ${config.currentVerse}`;
+        
+        const el = document.createElement('textarea');
+        el.value = copyString;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+
+        showToast(config.copyDoneMsg);
+    });
+
+    function showToast(msg) {
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 2000);
+    }
+
+    // Start
+    window.onload = init;
+
+</script>
+
 </body>
 </html>
