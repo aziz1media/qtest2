@@ -10,27 +10,40 @@
         
         body {
             font-family: 'Noto Sans Arabic', 'Amiri', serif;
-            background-color: #f8fafc;
+            background-color: #f1f5f9;
             user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            margin: 0;
+            padding-top: 2rem;
+        }
+
+        .main-card {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e2e8f0;
         }
 
         .verse-container {
             transition: all 0.3s ease;
             scrollbar-width: thin;
             scrollbar-color: #cbd5e1 transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .verse-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
+        .verse-container::-webkit-scrollbar { width: 6px; }
         .verse-container::-webkit-scrollbar-thumb {
             background-color: #cbd5e1;
             border-radius: 10px;
-        }
-
-        .progress-bar-fill {
-            transition: width 0.1s linear;
         }
 
         .toast {
@@ -39,94 +52,83 @@
             left: 50%;
             transform: translateX(-50%) translateY(100px);
             transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 50;
+            z-index: 100;
         }
 
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
 
         select {
             appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: left 1rem center;
-            background-size: 1em;
+            background-size: 1.2em;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col border border-slate-100">
-        <!-- Top Section -->
-        <div class="p-6 space-y-4">
-            <select id="chapterSelect" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-lg font-bold text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <option value="">اختر سورة</option>
+    <div class="main-card overflow-hidden">
+        <!-- Top Section: Dropdown & Status -->
+        <div class="p-5 space-y-4 border-b border-slate-100">
+            <select id="chapterSelect" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-xl font-bold text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                <option value="">جاري التحميل...</option>
             </select>
 
-            <div id="statusInfo" class="flex justify-between items-center text-sm font-medium text-slate-500 opacity-0 transition-opacity duration-300">
+            <div id="statusInfo" class="flex justify-between items-center text-sm font-bold text-slate-500 px-1 opacity-0 transition-opacity">
                 <span id="verseCounter">0 / 0</span>
                 <span id="chapterNameDisplay">--</span>
             </div>
 
-            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div id="progressBar" class="progress-bar-fill bg-emerald-500 h-full w-0"></div>
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                <div id="progressBar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
             </div>
         </div>
 
-        <!-- Middle Section (Verse Text) -->
-        <div class="px-6 py-4 flex-grow bg-slate-50/50">
-            <div id="verseBox" class="verse-container w-full bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-center text-center cursor-pointer hover:border-emerald-300 transition-colors overflow-y-auto" style="min-height: 150px;">
-                <p id="verseText" class="text-2xl leading-relaxed text-slate-800 rtl"></p>
+        <!-- Middle Section: Verse Display -->
+        <div class="p-5 flex-grow bg-slate-50/30">
+            <div id="verseBox" class="verse-container w-full bg-white border border-slate-200 rounded-2xl p-6 text-center cursor-pointer hover:border-emerald-400 transition-all overflow-y-auto shadow-sm">
+                <p id="verseText" class="text-3xl leading-relaxed text-slate-800 font-medium rtl"></p>
             </div>
         </div>
 
-        <!-- Bottom Section (Controls) -->
-        <div class="p-6 flex items-center justify-between border-t border-slate-100">
-            <button id="prevBtn" class="w-1/3 flex flex-col items-center justify-center space-y-1 text-slate-600 hover:text-emerald-600 transition-colors disabled:opacity-30">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                <span class="text-xs font-bold uppercase tracking-wider">السابق</span>
+        <!-- Bottom Section: Controls (3 Equal Parts) -->
+        <div class="flex items-center border-t border-slate-100">
+            <button id="prevBtn" class="w-1/3 py-6 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-emerald-600 hover:bg-slate-50 transition-all disabled:opacity-20 disabled:hover:bg-transparent">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                <span class="text-[10px] font-black uppercase tracking-widest">السابق</span>
             </button>
 
-            <button id="playPauseBtn" class="w-1/3 flex flex-col items-center justify-center space-y-1 text-emerald-600 hover:scale-105 transition-transform">
-                <div class="p-3 bg-emerald-100 rounded-full">
-                    <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    <svg id="pauseIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <button id="playPauseBtn" class="w-1/3 py-6 border-x border-slate-100 flex flex-col items-center justify-center gap-1 text-emerald-600 hover:bg-emerald-50 transition-all">
+                <div id="btnIconContainer">
+                    <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <svg id="pauseIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                 </div>
-                <span id="playLabel" class="text-xs font-bold uppercase tracking-wider">تشغيل</span>
+                <span id="playLabel" class="text-[10px] font-black uppercase tracking-widest">تشغيل</span>
             </button>
 
-            <button id="nextBtn" class="w-1/3 flex flex-col items-center justify-center space-y-1 text-slate-600 hover:text-emerald-600 transition-colors disabled:opacity-30">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                <span class="text-xs font-bold uppercase tracking-wider">التالي</span>
+            <button id="nextBtn" class="w-1/3 py-6 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-emerald-600 hover:bg-slate-50 transition-all disabled:opacity-20 disabled:hover:bg-transparent">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                <span class="text-[10px] font-black uppercase tracking-widest">التالي</span>
             </button>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg text-sm font-medium"></div>
-
+    <div id="toast" class="toast bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl text-base font-bold"></div>
     <audio id="audioPlayer" class="hidden"></audio>
 
     <script>
-        // --- State Management ---
         const state = {
             chapters: [],
-            allowedChapters: null,
+            allowedChapters: [],
             currentChapter: null,
             currentVerse: 1,
             baseUrl: '',
             remoteMode: false,
             localOverrides: [],
-            config: {
-                amount: '',
-                size: 5,
-                copyPrefix: '',
-                copyDone: ''
-            }
+            config: { amount: '', size: 5, copyPrefix: '', copyDone: '' }
         };
 
-        // --- DOM Elements ---
         const els = {
             chapterSelect: document.getElementById('chapterSelect'),
             verseCounter: document.getElementById('verseCounter'),
@@ -145,45 +147,30 @@
             toast: document.getElementById('toast')
         };
 
-        // --- File Loading Logic ---
         async function fetchFile(filename, isOptional = false) {
-            let url = filename;
-            
-            // Check if we should use remote URL
-            if (state.remoteMode && !state.localOverrides.includes(filename)) {
-                url = state.baseUrl + filename;
-            }
-
+            let url = (state.remoteMode && !state.localOverrides.includes(filename)) 
+                      ? state.baseUrl + filename 
+                      : filename;
             try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`Not found: ${url}`);
+                const response = await fetch(url + '?t=' + Date.now()); // Prevent cache
+                if (!response.ok) throw new Error();
                 return await response.text();
             } catch (err) {
-                if (isOptional) return null;
-                console.error(`Error loading ${filename}:`, err);
-                return null;
+                return isOptional ? null : "";
             }
         }
 
-        function getFileUrl(path) {
-            if (state.remoteMode) return state.baseUrl + path;
-            return path;
-        }
-
-        // --- Initialization ---
         async function init() {
-            // 1. Check for data.txt (Remote Mode)
-            const dataTxt = await fetch('data.txt', true);
-            if (dataTxt) {
+            // 1. Data Mode
+            const dataTxt = await fetch('data.txt?t=' + Date.now()).then(r => r.text()).catch(() => null);
+            if (dataTxt && dataTxt.trim()) {
                 const lines = dataTxt.split('\n').map(l => l.trim()).filter(l => l);
-                if (lines.length > 0) {
-                    state.remoteMode = true;
-                    state.baseUrl = lines[0].endsWith('/') ? lines[0] : lines[0] + '/';
-                    state.localOverrides = lines.slice(1);
-                }
+                state.remoteMode = true;
+                state.baseUrl = lines[0].endsWith('/') ? lines[0] : lines[0] + '/';
+                state.localOverrides = lines.slice(1);
             }
 
-            // 2. Load Core Config Files
+            // 2. Load Configs
             const [amountData, sizeData, allowedData, copyData, copyDoneData] = await Promise.all([
                 fetchFile('amount.txt'),
                 fetchFile('size.txt'),
@@ -192,23 +179,24 @@
                 fetchFile('copy done.txt')
             ]);
 
-            // Parse amount.txt
-            if (amountData) {
-                state.chapters = amountData.split('\n').filter(l => l.trim()).map(line => {
-                    const [num, count, name] = line.trim().split(/\s+/);
-                    return { num, count: parseInt(count), name };
-                });
-            }
-
-            // Parse size.txt
+            // Parse size first for UI
             if (sizeData) {
                 state.config.size = parseInt(sizeData.trim()) || 5;
-                // Calculate height based on line height (~1.5rem) and lines
-                const calculatedHeight = (state.config.size * 1.5) + 'rem';
-                els.verseBox.style.height = calculatedHeight;
+                els.verseBox.style.height = (state.config.size * 2.2) + 'rem';
             }
 
-            // Parse allowed.txt
+            // Parse Chapters
+            if (amountData) {
+                state.chapters = amountData.split('\n')
+                    .map(l => l.trim())
+                    .filter(l => l)
+                    .map(line => {
+                        const parts = line.split(/\s+/);
+                        return { num: parts[0], count: parseInt(parts[1]), name: parts.slice(2).join(' ') };
+                    });
+            }
+
+            // Parse Allowed
             if (allowedData) {
                 state.allowedChapters = allowedData.split('\n').map(l => l.trim()).filter(l => l);
             }
@@ -216,25 +204,28 @@
             state.config.copyPrefix = copyData ? copyData.trim() : '';
             state.config.copyDone = copyDoneData ? copyDoneData.trim() : 'تم النسخ';
 
-            populateChapterList();
+            renderDropdown();
         }
 
-        function populateChapterList() {
-            const filtered = state.allowedChapters 
+        function renderDropdown() {
+            els.chapterSelect.innerHTML = '<option value="">اختر سورة</option>';
+            
+            // Logic: Use allowed.txt if it has items, otherwise use all from amount.txt
+            const list = (state.allowedChapters.length > 0)
                 ? state.chapters.filter(c => state.allowedChapters.includes(c.num))
                 : state.chapters;
 
-            filtered.forEach(ch => {
+            if (list.length === 0 && state.chapters.length > 0 && state.allowedChapters.length > 0) {
+                // Debug fallback: if allowed was provided but matched nothing
+                console.warn("Allowed list didn't match any chapters in amount.txt");
+            }
+
+            list.forEach(ch => {
                 const opt = document.createElement('option');
                 opt.value = ch.num;
                 opt.textContent = ch.name;
                 els.chapterSelect.appendChild(opt);
             });
-        }
-
-        // --- Core Functionality ---
-        function pad(num) {
-            return num.toString().padStart(3, '0');
         }
 
         async function loadVerse(chapterNum, verseNum) {
@@ -244,39 +235,29 @@
             state.currentVerse = verseNum;
             state.currentChapter = chapter;
 
-            // UI Updates
-            els.statusInfo.classList.remove('opacity-0');
+            els.statusInfo.style.opacity = "1";
             els.verseCounter.textContent = `${verseNum} / ${chapter.count}`;
             els.chapterNameDisplay.textContent = chapter.name;
             els.progressBar.style.width = `${(verseNum / chapter.count) * 100}%`;
             
-            // Toggle buttons
             els.prevBtn.disabled = verseNum <= 1;
             els.nextBtn.disabled = verseNum >= chapter.count;
 
-            // Load Text
-            const textPath = `chapters/${chapterNum}/text/${pad(verseNum)}.txt`;
+            const padV = verseNum.toString().padStart(3, '0');
+            const textPath = `chapters/${chapterNum}/text/${padV}.txt`;
+            const audioPath = `chapters/${chapterNum}/audio/${padV}.mp3`;
+
+            // Text Loading
+            els.verseText.textContent = "جاري التحميل...";
             const text = await fetchFile(textPath);
-            els.verseText.textContent = text || "...";
+            els.verseText.textContent = text || `[النص غير متوفر: آية ${verseNum}]`;
             els.verseBox.scrollTop = 0;
 
-            // Load Audio
-            const audioPath = `chapters/${chapterNum}/audio/${pad(verseNum)}.mp3`;
-            els.audioPlayer.src = getFileUrl(audioPath);
+            // Audio Loading
             stopPlayback();
-        }
-
-        function togglePlayback() {
-            if (!state.currentChapter) return;
-
-            if (els.audioPlayer.paused) {
-                els.audioPlayer.play().catch(e => console.error("Audio playback failed", e));
-                els.playIcon.classList.add('hidden');
-                els.pauseIcon.classList.remove('hidden');
-                els.playLabel.textContent = "إيقاف";
-            } else {
-                stopPlayback();
-            }
+            els.audioPlayer.src = (state.remoteMode && !state.localOverrides.includes('chapters')) 
+                                  ? state.baseUrl + audioPath 
+                                  : audioPath;
         }
 
         function stopPlayback() {
@@ -286,68 +267,55 @@
             els.playLabel.textContent = "تشغيل";
         }
 
+        function togglePlayback() {
+            if (!state.currentChapter) return;
+            if (els.audioPlayer.paused) {
+                els.audioPlayer.play().catch(() => {
+                    showToast("ملف الصوت غير متوفر");
+                });
+                els.playIcon.classList.add('hidden');
+                els.pauseIcon.classList.remove('hidden');
+                els.playLabel.textContent = "إيقاف";
+            } else {
+                stopPlayback();
+            }
+        }
+
         function showToast(msg) {
             els.toast.textContent = msg;
             els.toast.classList.add('show');
             setTimeout(() => els.toast.classList.remove('show'), 2000);
         }
 
-        function copyVerse() {
-            if (!state.currentChapter) return;
-
-            const text = `${state.config.copyPrefix} ${state.currentChapter.num} ${state.currentChapter.name} ${state.currentVerse}`;
-            
-            // Traditional copy fallback
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showToast(state.config.copyDone);
-            } catch (err) {
-                console.error('Copy failed', err);
-            }
-            document.body.removeChild(textArea);
-        }
-
-        // --- Event Listeners ---
         els.chapterSelect.addEventListener('change', (e) => {
-            if (e.target.value) {
-                loadVerse(e.target.value, 1);
-            }
+            if (e.target.value) loadVerse(e.target.value, 1);
         });
 
         els.playPauseBtn.addEventListener('click', togglePlayback);
-
         els.nextBtn.addEventListener('click', () => {
             if (state.currentChapter && state.currentVerse < state.currentChapter.count) {
                 loadVerse(state.currentChapter.num, state.currentVerse + 1);
             }
         });
-
         els.prevBtn.addEventListener('click', () => {
             if (state.currentChapter && state.currentVerse > 1) {
                 loadVerse(state.currentChapter.num, state.currentVerse - 1);
             }
         });
-
-        els.verseBox.addEventListener('click', copyVerse);
-
-        els.audioPlayer.addEventListener('timeupdate', () => {
-            const p = (els.audioPlayer.currentTime / els.audioPlayer.duration) * 100;
-            if (!isNaN(p)) {
-                // We keep progress bar tied to verse count generally, 
-                // but we could overlay audio progress if desired. 
-                // Currently, UI requirement implies progress = verse position.
-            }
+        els.verseBox.addEventListener('click', () => {
+            if (!state.currentChapter) return;
+            const text = `${state.config.copyPrefix} ${state.currentChapter.num} ${state.currentChapter.name} ${state.currentVerse}`;
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast(state.config.copyDone);
         });
 
-        els.audioPlayer.addEventListener('ended', () => {
-            stopPlayback();
-        });
+        els.audioPlayer.addEventListener('ended', stopPlayback);
 
-        // Initialize on load
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
