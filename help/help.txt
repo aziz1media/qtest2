@@ -1,0 +1,8 @@
+(T:S)
+fromhelp
+(H1:hi)
+(B:boldy)
+(SIZE: big --- 200%)
+(COPY:click to clip --- nice)
+(LINK:open link --- https://t.me/aziz1media)
+(LINK:file1 --- 1.txt)
