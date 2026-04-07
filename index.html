@@ -428,7 +428,11 @@
 
     async function smartFetch(file, skipCache = false) {
         if (!skipCache && state.cache.has(file)) return state.cache.get(file);
-        const path = (state.baseURL && !state.overrides.has(file)) ? state.baseURL + file : file;
+        
+        // Priority logic: help/ folder always local
+        const isHelp = file.startsWith('help/');
+        const path = (state.baseURL && !state.overrides.has(file) && !isHelp) ? state.baseURL + file : file;
+        
         try {
             const r = await fetch(path);
             const text = r.ok ? await r.text() : null;
@@ -483,46 +487,47 @@
         lines.forEach(line => {
             let processed = line;
 
-            // Alignment Tags
-            if (line.includes('(T:S)')) { align = 'center'; processed = processed.replace('(T:S)', ''); }
-            if (line.includes('(T:R)')) { align = 'right'; processed = processed.replace('(T:R)', ''); }
-            if (line.includes('(T:L)')) { align = 'left'; processed = processed.replace('(T:L)', ''); }
+            // Alignment Tags (Case Insensitive)
+            if (/\(T:S\)/i.test(processed)) { align = 'center'; processed = processed.replace(/\(T:S\)/i, ''); }
+            if (/\(T:R\)/i.test(processed)) { align = 'right'; processed = processed.replace(/\(T:R\)/i, ''); }
+            if (/\(T:L\)/i.test(processed)) { align = 'left'; processed = processed.replace(/\(T:L\)/i, ''); }
 
             // Headings
-            const hMatch = processed.match(/\(H([1-6]):(.*?)\)/);
-            if (hMatch) {
-                html += `<h${hMatch[1]} style="text-align:${align}">${hMatch[2]}</h${hMatch[1]}>`;
-                return;
-            }
+            processed = processed.replace(/\(H([1-6]):\s*(.*?)\)/i, (m, lv, txt) => {
+                return `<h${lv} style="text-align:${align}">${txt}</h${lv}>`;
+            });
 
             // Inline Formatting
-            processed = processed.replace(/\(B:(.*?)\)/g, '<strong>$1</strong>');
-            processed = processed.replace(/\(COLOR:(.*?)---(.*?)\)/g, '<span style="color:$2">$1</span>');
-            processed = processed.replace(/\(SIZE:(.*?)---(.*?)\)/g, '<span style="font-size:$2">$1</span>');
-            processed = processed.replace(/\(BR\)/g, '<br>');
-            processed = processed.replace(/\(HR\)/g, '<hr style="border:0; border-top:1px solid var(--border-color)">');
+            processed = processed.replace(/\(B:\s*(.*?)\)/gi, '<strong>$1</strong>');
+            processed = processed.replace(/\(COLOR:\s*(.*?)\s*---\s*(.*?)\)/gi, '<span style="color:$2">$1</span>');
+            processed = processed.replace(/\(SIZE:\s*(.*?)\s*---\s*(.*?)\)/gi, '<span style="font-size:$2">$1</span>');
+            processed = processed.replace(/\(BR\)/gi, '<br>');
+            processed = processed.replace(/\(HR\)/gi, '<hr style="border:0; border-top:1px solid var(--border-color)">');
 
             // Images
-            processed = processed.replace(/\(IMG:(.*?)\)/g, (m, src) => {
+            processed = processed.replace(/\(IMG:\s*(.*?)\)/gi, (m, src) => {
                 const isUrl = src.startsWith('http');
                 const fullSrc = isUrl ? src : `img/${src}`;
                 return `<img src="${fullSrc}" class="p-img" alt="Image">`;
             });
 
             // Copy
-            processed = processed.replace(/\(COPY:(.*?)---(.*?)\)/g, `<span class="p-copy" onclick="copyText('${btoa(unescape(encodeURIComponent(processed.match(/\(COPY:(.*?)---(.*?)\)/)[2])))}', this)">$1</span>`);
+            processed = processed.replace(/\(COPY:\s*(.*?)\s*---\s*(.*?)\)/gi, (m, lbl, val) => {
+                const b64 = btoa(unescape(encodeURIComponent(val)));
+                return `<span class="p-copy" onclick="copyText('${b64}', this)">${lbl}</span>`;
+            });
 
             // Audio
-            processed = processed.replace(/\(AUDIO:(.*?)---(.*?)\)/g, (m, lbl, url) => {
+            processed = processed.replace(/\(AUDIO:\s*(.*?)\s*---\s*(.*?)\)/gi, (m, lbl, url) => {
                 return `<span class="p-audio" onclick="playHelpAudio('${url}')">🔊 ${lbl}</span>`;
             });
 
             // Links (External or Internal)
-            processed = processed.replace(/\(LINK:(.*?)---(.*?)\)/g, (m, lbl, target) => {
-                if (target.startsWith('http')) {
-                    return `<a href="${target}" target="_blank" class="p-link">${lbl}</a>`;
+            processed = processed.replace(/\(LINK:\s*(.*?)\s*---\s*(.*?)\)/gi, (m, lbl, target) => {
+                if (target.trim().startsWith('http')) {
+                    return `<a href="${target.trim()}" target="_blank" class="p-link">${lbl}</a>`;
                 } else {
-                    return `<span class="p-link" onclick="showInteractive('${baseDir}${target}', ${elements.helpOverlay.style.display==='flex'})">${lbl}</span>`;
+                    return `<span class="p-link" onclick="showInteractive('${baseDir}${target.trim()}', ${elements.helpOverlay.style.display==='flex'})">${lbl}</span>`;
                 }
             });
 
@@ -586,7 +591,7 @@
 
         const newV = state.currentVerse + dir;
         if (newV >= 1 && newV <= state.currentChapter.total) {
-            // Apply delay for Next button
+            // Apply delay for Next button (dir 1 is next)
             if (dir === 1 && state.settings.wait > 0) {
                 state.canNext = false;
                 updateUI();
@@ -611,7 +616,9 @@
         elements.playIcon.style.display = mainAudio.paused ? 'block' : 'none';
         elements.pauseIcon.style.display = mainAudio.paused ? 'none' : 'block';
         
+        // Prev button is Left
         elements.prevBtn.disabled = !state.currentChapter || state.currentVerse <= 1;
+        // Next button is Right
         elements.nextBtn.disabled = !state.currentChapter || !state.canNext;
     }
 
@@ -627,7 +634,7 @@
         document.documentElement.style.setProperty('--bg-color', theme.bg);
         document.documentElement.style.setProperty('--text-color', theme.text);
         document.documentElement.style.setProperty('--accent-color', theme.text);
-        document.documentElement.style.setProperty('--border-color', theme.text === '#000000' ? '#ccc' : '#333');
+        document.documentElement.style.setProperty('--border-color', theme.text === '#000000' || theme.text === 'black' ? '#ccc' : '#333');
     }
 
     function cycleTheme() {
